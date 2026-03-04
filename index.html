@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main>
+        <h1>BMI Calculator</h1>
+        <form class="form" id="form">
+            <div class="change">
+                <div class="opt active">CMs / KGs</div>
+                <div class="opt">Inches / LBs</div>
+            </div>
+            <div class="inputBox full">
+                <label for="name">Name:</label>
+                <input type="text" placeholder="Sedney Swiny" id="name" maxlength="50">
+            </div>
+            <div class="twoWrapper">
+                <div class="inputBox">
+                    <label for="Height">Height:</label>
+                    <input type="number" id="height" placeholder="100">
+                </div>
+                <div class="inputBox">
+                    <label for="weigght">Weight:</label>
+                    <input type="number" id="weight" placeholder="60">
+                </div>
+            </div>
+            <button id="submit" class="submit">Submit</button>
+            <button type="button" id="resetBtn" class="resetBtn">Reset All</button>
+            <div id="resultBox" class="resultBox"></div>
+            <section id="processingPanel" class="processingPanel">
+                <div class="processingHead">Processing Request</div>
+                <div id="processingType" class="processingType"></div>
+                <ul id="processingLog" class="processingLog"></ul>
+            </section>
+            <section class="bmiGuide">
+                <h3>BMI Categories</h3>
+                <table class="bmiTable">
+                    <thead>
+                        <tr>
+                            <th>BMI Range</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Below 18.5</td>
+                            <td>Underweight</td>
+                        </tr>
+                        <tr>
+                            <td>18.5 - 24.9</td>
+                            <td>Normal weight</td>
+                        </tr>
+                        <tr>
+                            <td>25 - 29.9</td>
+                            <td>Overweight</td>
+                        </tr>
+                        <tr>
+                            <td>30 and above</td>
+                            <td>Obese</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section id="entriesBox" class="entriesBox">
+                <div class="entriesHead">
+                    <button type="button" id="clearEntriesBtn" class="clearEntriesBtn">Clear Entries</button>
+                    <h3>Saved Entries</h3>
+                </div>
+                <ul id="entriesList" class="entriesList"></ul>
+            </section>
+        </form>
+    </main>
+
+    <div class="loader" id="loader">
+        <h1 class="loadingContent">
+            Loading the BMI Calculator
+        </h1>
+        <div class="spinner"></div>
+    </div>
+    <script src="./script.js"></script>
+</body>
+
+</html>
