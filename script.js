@@ -43,7 +43,7 @@ function initTheme() {
         applyTheme(savedTheme);
         return;
     }
-    applyTheme("light");
+    applyTheme("dark");
 }
 
 function loadEntries() {
