@@ -9,6 +9,13 @@
 </head>
 
 <body>
+    <div class="themeLamp" id="themeLamp" aria-hidden="true">
+        <div class="lampShade"></div>
+        <svg class="lampCord" id="lampCord" viewBox="0 0 160 220" preserveAspectRatio="none" aria-hidden="true">
+            <path id="lampCordPath" d="M80 24 Q80 62 80 108"></path>
+        </svg>
+        <button type="button" id="lampPull" class="lampPull" aria-label="Pull to change theme"></button>
+    </div>
 
     <main>
         <h1>BMI Calculator</h1>
@@ -34,11 +41,6 @@
             <button id="submit" class="submit">Submit</button>
             <button type="button" id="resetBtn" class="resetBtn">Reset All</button>
             <div id="resultBox" class="resultBox"></div>
-            <section id="processingPanel" class="processingPanel">
-                <div class="processingHead">Processing Request</div>
-                <div id="processingType" class="processingType"></div>
-                <ul id="processingLog" class="processingLog"></ul>
-            </section>
             <section class="bmiGuide">
                 <h3>BMI Categories</h3>
                 <table class="bmiTable">
@@ -77,13 +79,6 @@
             </section>
         </form>
     </main>
-
-    <div class="loader" id="loader">
-        <h1 class="loadingContent">
-            Loading the BMI Calculator
-        </h1>
-        <div class="spinner"></div>
-    </div>
     <script src="./script.js"></script>
 </body>
 

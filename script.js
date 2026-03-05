@@ -1,21 +1,12 @@
 function $(input) { return document.querySelector(input) }
 
-const loadingElement = $("#loader");
-
-setTimeout(function () {
-    loadingElement.classList.add('move');
-    setTimeout(function () {
-        loadingElement.classList.add("disappear");
-    }, 500);
-}, 2500);
-
 const STORAGE_KEY = "bmi_entries";
+const THEME_KEY = "bmi_theme";
 const form = $("#form");
 const options = document.querySelectorAll(".opt");
 const heightInput = $("#height");
 const weightInput = $("#weight");
 const nameInput = $("#name");
-const submitButton = $("#submit");
 const resetButton = $("#resetBtn");
 const clearEntriesButton = $("#clearEntriesBtn");
 const resultBox = $("#resultBox");
@@ -23,14 +14,37 @@ const entriesBox = $("#entriesBox");
 const entriesList = $("#entriesList");
 const heightLabel = document.querySelector('label[for="Height"]');
 const weightLabel = document.querySelector('label[for="weigght"]');
-const processingPanel = $("#processingPanel");
-const processingType = $("#processingType");
-const processingLog = $("#processingLog");
+const htmlRoot = document.documentElement;
+const themeLamp = $("#themeLamp");
+const lampPull = $("#lampPull");
+const lampCordPath = $("#lampCordPath");
 
 let isMetric = true;
-let isProcessing = false;
 
 resultBox.style.display = "none";
+
+function applyTheme(theme) {
+    htmlRoot.setAttribute("data-theme", theme);
+}
+
+function getCurrentTheme() {
+    return htmlRoot.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function toggleTheme() {
+    const nextTheme = getCurrentTheme() === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    localStorage.setItem(THEME_KEY, nextTheme);
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === "dark" || savedTheme === "light") {
+        applyTheme(savedTheme);
+        return;
+    }
+    applyTheme("light");
+}
 
 function loadEntries() {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -91,52 +105,89 @@ function getResultClass(category) {
     return "obese";
 }
 
-function wait(time) {
-    return new Promise(function (resolve) {
-        setTimeout(resolve, time);
+function initLampPull() {
+    if (!themeLamp || !lampPull || !lampCordPath) return;
+
+    const PULL_TRIGGER = 80;
+    const MAX_PULL_X = 70;
+    const MAX_PULL_Y = 120;
+    const START_X = 80;
+    const START_Y = 24;
+    const END_X_BASE = 80;
+    const END_Y_BASE = 108;
+    let isPulling = false;
+    let startX = 0;
+    let startY = 0;
+    let hasToggledOnThisPull = false;
+    let releaseTimer = null;
+
+    function drawCord(offsetX, offsetY) {
+        const endX = END_X_BASE + offsetX;
+        const endY = END_Y_BASE + offsetY;
+        const controlX = START_X + offsetX * 0.45;
+        const controlY = START_Y + 30 + offsetY * 0.6;
+        lampCordPath.setAttribute("d", `M${START_X} ${START_Y} Q${controlX} ${controlY} ${endX} ${endY}`);
+    }
+
+    drawCord(0, 0);
+
+    lampPull.addEventListener("pointerdown", function (event) {
+        isPulling = true;
+        startX = event.clientX;
+        startY = event.clientY;
+        hasToggledOnThisPull = false;
+        if (releaseTimer) {
+            clearTimeout(releaseTimer);
+            releaseTimer = null;
+        }
+        themeLamp.classList.remove("justReleased");
+        themeLamp.classList.add("isPulling");
+        lampPull.setPointerCapture(event.pointerId);
     });
-}
 
-async function typeLine(text) {
-    processingType.textContent = "";
-    for (let i = 0; i < text.length; i += 1) {
-        processingType.textContent += text[i];
-        await wait(25);
+    lampPull.addEventListener("pointermove", function (event) {
+        if (!isPulling) return;
+        const deltaX = event.clientX - startX;
+        const deltaY = event.clientY - startY;
+        const clampedX = Math.max(-MAX_PULL_X, Math.min(MAX_PULL_X, deltaX));
+        const clampedY = Math.max(0, Math.min(MAX_PULL_Y, deltaY));
+        const pullDistance = Math.hypot(clampedX, clampedY);
+
+        themeLamp.style.setProperty("--pull-x", `${clampedX}px`);
+        themeLamp.style.setProperty("--pull-y", `${clampedY}px`);
+        drawCord(clampedX, clampedY);
+
+        if (pullDistance >= PULL_TRIGGER && !hasToggledOnThisPull) {
+            toggleTheme();
+            hasToggledOnThisPull = true;
+            lampPull.classList.add("flash");
+        }
+    });
+
+    function resetPullState() {
+        if (!isPulling) return;
+        isPulling = false;
+        themeLamp.classList.remove("isPulling");
+        themeLamp.style.setProperty("--pull-x", "0px");
+        themeLamp.style.setProperty("--pull-y", "0px");
+        drawCord(0, 0);
+        themeLamp.classList.add("justReleased");
+        if (releaseTimer) clearTimeout(releaseTimer);
+        releaseTimer = setTimeout(function () {
+            themeLamp.classList.remove("justReleased");
+            releaseTimer = null;
+        }, 260);
+        setTimeout(function () {
+            lampPull.classList.remove("flash");
+        }, 180);
     }
-    const row = document.createElement("li");
-    row.textContent = text;
-    processingLog.appendChild(row);
-    processingLog.scrollTop = processingLog.scrollHeight;
-    await wait(900);
-}
 
-async function runProcessingSequence(roundedBmi, category) {
-    const lines = [
-        "Getting data from the form",
-        "Sending data to AWS centers for heavy GPU calculations",
-        "Using Quantum physics to calculate",
-        "Traning models to calculate BMI",
-        "Giving data",
-        "Traning......",
-        "Calculating",
-        "Laws of physics applied",
-        "quantam machanics applied",
-        `Finally calculated ${roundedBmi} - ${category}`
-    ];
-
-    processingLog.innerHTML = "";
-    processingType.textContent = "";
-    processingPanel.classList.add("show");
-    await wait(700);
-
-    for (const line of lines) {
-        await typeLine(line);
-    }
+    lampPull.addEventListener("pointerup", resetPullState);
+    lampPull.addEventListener("pointercancel", resetPullState);
 }
 
 options.forEach(function (option, index) {
     option.addEventListener("click", function () {
-        if (isProcessing) return;
         options.forEach(function (item) { item.classList.remove("active"); });
         option.classList.add("active");
         isMetric = index === 0;
@@ -166,21 +217,16 @@ options.forEach(function (option, index) {
 });
 
 clearEntriesButton.addEventListener("click", function () {
-    if (isProcessing) return;
     entries = [];
     saveEntries();
     renderEntries();
 });
 
 resetButton.addEventListener("click", function () {
-    if (isProcessing) return;
     form.reset();
     resultBox.style.display = "none";
     resultBox.textContent = "";
     resultBox.classList.remove("underweight", "normal", "overweight", "obese");
-    processingPanel.classList.remove("show");
-    processingType.textContent = "";
-    processingLog.innerHTML = "";
     options.forEach(function (item) { item.classList.remove("active"); });
     options[0].classList.add("active");
     isMetric = true;
@@ -196,9 +242,8 @@ resetButton.addEventListener("click", function () {
     resetButton.classList.add("spinBurst");
 });
 
-form.addEventListener("submit", async function (event) {
+form.addEventListener("submit", function (event) {
     event.preventDefault();
-    if (isProcessing) return;
 
     const heightValue = Number(heightInput.value);
     const weightValue = Number(weightInput.value);
@@ -221,12 +266,6 @@ form.addEventListener("submit", async function (event) {
     resultBox.textContent = "";
     resultBox.classList.remove("underweight", "normal", "overweight", "obese");
 
-    isProcessing = true;
-    submitButton.disabled = true;
-    resetButton.disabled = true;
-    clearEntriesButton.disabled = true;
-    await runProcessingSequence(roundedBmi, category);
-
     const entry = {
         name: userName,
         height: heightValue,
@@ -246,10 +285,8 @@ form.addEventListener("submit", async function (event) {
     resultBox.classList.add(getResultClass(category));
     resultBox.style.display = "block";
     resultBox.innerHTML = `<h3>${userName}, your BMI is ${roundedBmi}</h3><p>Category: ${category}</p>`;
-    submitButton.disabled = false;
-    resetButton.disabled = false;
-    clearEntriesButton.disabled = false;
-    isProcessing = false;
 });
 
+initTheme();
+initLampPull();
 renderEntries();
